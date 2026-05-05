@@ -1,0 +1,4 @@
+{
+  "devCommand": "vite --port $PORT",
+  "otherCommand": "change devCommand to run on mobile using -> 'vite  --host --port $PORT'"
+}
