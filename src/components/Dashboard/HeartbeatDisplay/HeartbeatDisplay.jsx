@@ -11,7 +11,6 @@ const HeartbeatDisplay = () => {
   const [collecting, setCollecting] = useState(false);
   const [summary, setSummary] = useState({ prediction: 0, heartRate: 0 });
   const [isTesting, setIsTesting] = useState(true);
-  // const [isTesting, setIsTesting] = useState(false);
   const [randomIntervals, setRandomIntervals] = useState([]);
   const socketRef = useRef(null);
 
