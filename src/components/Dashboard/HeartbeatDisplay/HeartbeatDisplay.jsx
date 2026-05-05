@@ -10,8 +10,8 @@ const HeartbeatDisplay = () => {
   const [data, setData] = useState({ rr_interval: 0, heart_beat: 0 });
   const [collecting, setCollecting] = useState(false);
   const [summary, setSummary] = useState({ prediction: 0, heartRate: 0 });
-  // const [isTesting, setIsTesting] = useState(true);
-  const [isTesting, setIsTesting] = useState(false);
+  const [isTesting, setIsTesting] = useState(true);
+  // const [isTesting, setIsTesting] = useState(false);
   const [randomIntervals, setRandomIntervals] = useState([]);
   const socketRef = useRef(null);
 
@@ -227,7 +227,7 @@ const HeartbeatDisplay = () => {
             {collecting ? 'Collecting Data...' : 'Start Data Collection'}
           </Button>
         </Box>
-        {/* <FormControlLabel
+        { <FormControlLabel
           control={
             <Checkbox
               checked={isTesting}
@@ -236,7 +236,7 @@ const HeartbeatDisplay = () => {
           }
           label="Testing"
           sx={{ fontSize : '1rem' }}
-        /> */}
+        /> }
       </Box>
     </Paper>
   );
