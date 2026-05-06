@@ -5,11 +5,13 @@ import HeartbeatDisplay from './HeartbeatDisplay/HeartbeatDisplay';
 import WeeklyActivities from './WeeklyActivities';
 import DailyTasks from './DailyTasks/DailyTasks';
 import ProgressChart from './ProgressChart'
+import EditProfileDialog from "./EditProfileDialog"
 
 const Dashboard = () => {
 
   return (
       <>
+        <EditProfileDialog/>
         <Grid container spacing={3}>
           <Grid item xs={12}>
             <Profile></Profile>

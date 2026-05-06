@@ -11,6 +11,7 @@ import { useUser } from "../context/userContext";
 import { AuthProvider } from "../context/authContext";
 import { ChatProvider } from "../context/chatContext";
 import { ArticlesProvider } from "../context/articlesContext"
+import { DashboardDataProvider } from "../context/dashboardDataContext.jsx";
 
 
 const AppRoutes = () => {
@@ -34,15 +35,17 @@ const AppRoutes = () => {
         <AuthProvider>
             <ChatProvider>
                 <ArticlesProvider>
-                <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/articles" element={<ArticleList />} />
-                    <Route path="/dashboard" element={protectedRoute(<Dashboard />)} />
-                    <Route path="/messages" element={protectedRoute(<MessagesPage />)} />
-                    <Route path="/logout" element={protectedRoute(<Logout />)} />
-                    <Route path="/login" element={loggedInRedirect(<Login />)} />
-                    <Route path="/signup" element={loggedInRedirect(<Signup />)} />
-                </Routes>
+                <DashboardDataProvider>
+                    <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/articles" element={<ArticleList />} />
+                        <Route path="/dashboard" element={protectedRoute(<Dashboard />)} />
+                        <Route path="/messages" element={protectedRoute(<MessagesPage />)} />
+                        <Route path="/logout" element={protectedRoute(<Logout />)} />
+                        <Route path="/login" element={loggedInRedirect(<Login />)} />
+                        <Route path="/signup" element={loggedInRedirect(<Signup />)} />
+                    </Routes>
+                </DashboardDataProvider>
                 </ArticlesProvider>
             </ChatProvider>
         </AuthProvider>
