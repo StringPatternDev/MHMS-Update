@@ -1,28 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { List, ListItem, ListItemText, Typography, Grid } from '@mui/material';
 import ArticleCard from './ArticleCard';
-import axios from 'axios';
+import { useArticles } from "../../context/articlesContext.jsx";
 
 const ArticleList = () => {
-  const [articles, setArticles] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchArticles = async () => {
-      try {
-        const response = await axios.get('https://api.thenewsapi.com/v1/news/all?api_token=' + process.env.apiToken +'&search=mental%20health&categories=health');
-        setArticles(response.data.data);
-        setLoading(false);
-      } catch (error) {
-        setError(error);
-        setLoading(false);
-      }
-    };
-    fetchArticles();
-  }, []);
-  console.log(articles);
+  const {articles, loading, error} = useArticles();
 
   if (loading) {
     return <div>Loading...</div>;

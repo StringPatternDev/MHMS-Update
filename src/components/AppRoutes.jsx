@@ -10,6 +10,7 @@ import { Navigate } from "react-router-dom";
 import { useUser } from "../context/userContext";
 import { AuthProvider } from "../context/authContext";
 import { ChatProvider } from "../context/chatContext";
+import { ArticlesProvider } from "../context/articlesContext"
 
 
 const AppRoutes = () => {
@@ -32,6 +33,7 @@ const AppRoutes = () => {
     return (
         <AuthProvider>
             <ChatProvider>
+                <ArticlesProvider>
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/articles" element={<ArticleList />} />
@@ -41,6 +43,7 @@ const AppRoutes = () => {
                     <Route path="/login" element={loggedInRedirect(<Login />)} />
                     <Route path="/signup" element={loggedInRedirect(<Signup />)} />
                 </Routes>
+                </ArticlesProvider>
             </ChatProvider>
         </AuthProvider>
     );
