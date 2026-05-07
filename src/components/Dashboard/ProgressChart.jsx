@@ -1,6 +1,7 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend, ResponsiveContainer } from 'recharts';
 import { Paper, Typography } from '@mui/material';
+import {useDashboardData} from '../../context/dashboardDataContext';
 
 const data = [
   { name: 'Jan', progress: 30 },
@@ -14,20 +15,26 @@ const data = [
   // Add more data points
 ];
 
-const ProgressChart = () => (
-  <Paper elevation={3} sx={{ p: 2 }}>
-    <Typography variant="h6">Stress Tracking</Typography>
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
-          <YAxis />
-          <Tooltip />
-          <Legend />
-          <Bar dataKey="progress" fill="#8884d8" />
-        </BarChart>
-      </ResponsiveContainer>
-  </Paper>
-);
+const ProgressChart = () => {
+  const { vitals, loadingVitals } = useDashboardData();
+  console.log(vitals);
+
+
+  return(
+    <Paper elevation={3} sx={{ p: 2 }}>
+      <Typography variant="h6">Stress Tracking</Typography>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="progress" fill="#8884d8" />
+          </BarChart>
+        </ResponsiveContainer>
+    </Paper>
+  );
+}
 
 export default ProgressChart;

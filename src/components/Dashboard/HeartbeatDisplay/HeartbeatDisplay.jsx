@@ -5,6 +5,7 @@ import Button from '@mui/joy/Button';
 import LinearProgress from '@mui/joy/LinearProgress';
 import axios from 'axios';
 import io from 'socket.io-client';
+import {useDashboardData} from '../../../context/dashboardDataContext';
 
 const HeartbeatDisplay = () => {
   const [data, setData] = useState({ rr_interval: 0, heart_beat: 0 });
@@ -13,6 +14,7 @@ const HeartbeatDisplay = () => {
   const [isTesting, setIsTesting] = useState(true);
   const [randomIntervals, setRandomIntervals] = useState([]);
   const socketRef = useRef(null);
+  const { saveVital } = useDashboardData();
 
   // Generate random rr_interval values
   const generateRandomData = () => {
@@ -30,6 +32,7 @@ const HeartbeatDisplay = () => {
         const averageBPM = Math.round(60000 / averageRR);
         setSummary({ prediction: 1, heartRate: averageBPM }); // Not Stressed
         setCollecting(false);
+        saveVital(summary);
       }
     }, 1000);
   };
@@ -83,6 +86,7 @@ const HeartbeatDisplay = () => {
       setSummary(summaryData);
       setCollecting(false);
       socketRef.current.disconnect(); // Clean up after done
+      saveVital(summary);
     });
 
     // Handle errors

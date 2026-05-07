@@ -11,7 +11,6 @@ import {
   import { useDashboardData } from "../../context/dashboardDataContext";
   
   const EditProfileDialog = () => {
-    console.log("dialog open");
     const { currentUser } = useUser();
     const {
       editOpen,
