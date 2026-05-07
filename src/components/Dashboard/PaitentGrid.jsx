@@ -13,11 +13,13 @@ import { useChat } from "../../context/chatContext";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ProgressChartDialog from "./ProgressChartDialog";
+import { useDashboardData } from "../../context/dashboardDataContext";
 
 const PaitentGrid = () => {
   const { contacts, currentUser } = useUser();
   const { getPreviousChats } = useChat();
   const navigate = useNavigate();
+  const { loadVitalsForUser } = useDashboardData();
 
   const [chatPatients, setChatPatients] = useState([]);
   const [chartOpen, setChartOpen] = useState(false);
@@ -83,7 +85,10 @@ const PaitentGrid = () => {
                 <Button
                   variant="outlined"
                   startIcon={<ShowChartIcon />}
-                  onClick={() => setChartOpen(true)}
+                  onClick={() => {
+                    loadVitalsForUser(patient.id);
+                    setChartOpen(true);
+                  }}
                 >
                   Progress
                 </Button>

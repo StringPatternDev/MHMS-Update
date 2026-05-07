@@ -3,13 +3,13 @@ import {
   doc,
   updateDoc,
   collection,
-  setDoc,
   onSnapshot,
   query,
   orderBy,
   limit,
-  increment,
-  serverTimestamp
+  serverTimestamp,
+  setDoc,
+  increment
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { useUser } from "./userContext";
@@ -20,16 +20,19 @@ export const useDashboardData = () => useContext(DashboardDataContext);
 export const DashboardDataProvider = ({ children }) => {
   const { firebaseUser, isDoctor, currentUser } = useUser();
 
-  /* ---------------- UI STATE ---------------- */
+  /* ================= UI STATE ================= */
   const [editOpen, setEditOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
-  /* ---------------- DAILY VITALS STATE ---------------- */
+  /* ================= VITALS STATE ================= */
   const [dailyVitals, setDailyVitals] = useState([]);
-  const [loadingVitals, setLoadingVitals] = useState(true);
+  const [loadingVitals, setLoadingVitals] = useState(false);
 
-  /* ================== PROFILE EDIT ================== */
+  /* 🔑 Whose data is currently loaded */
+  const [activeUserId, setActiveUserId] = useState(null);
+
+  /* ================= PROFILE EDIT ================= */
 
   const openEditDialog = () => setEditOpen(true);
   const closeEditDialog = () => setEditOpen(false);
@@ -41,10 +44,8 @@ export const DashboardDataProvider = ({ children }) => {
       setSaving(true);
       setError(null);
 
-      const collectionName = isDoctor ? "doctors" : "users";
-      const ref = doc(db, collectionName, firebaseUser.uid);
-
-      await updateDoc(ref, {
+      const col = isDoctor ? "doctors" : "users";
+      await updateDoc(doc(db, col, firebaseUser.uid), {
         name: updatedData.name,
         email: updatedData.email,
         phoneNumber: updatedData.phoneNumber
@@ -52,100 +53,73 @@ export const DashboardDataProvider = ({ children }) => {
 
       closeEditDialog();
     } catch (err) {
-      console.error("❌ Profile update failed:", err);
-      setError("Failed to update profile");
+      setError("Profile update failed");
       throw err;
     } finally {
       setSaving(false);
     }
   };
 
-  /* ================== SAVE DAILY VITAL ================== */
+  /* ================= SAVE DAILY VITAL ================= */
 
-  /**
-   * ✅ Called from HeartbeatDisplay when summary is ready
-   * ✅ Stores in users/{uid}/dailyVitals/{YYYY-MM-DD}
-   * ✅ Atomic + cost‑efficient
-   */
   const saveVital = async (summary) => {
     if (!firebaseUser || isDoctor) return;
 
-    try {
-      const dateKey = new Date().toISOString().split("T")[0];
+    const dateKey = new Date().toISOString().split("T")[0];
+    const ref = doc(db, "users", firebaseUser.uid, "dailyVitals", dateKey);
 
-      const ref = doc(
-        db,
-        "users",
-        firebaseUser.uid,
-        "dailyVitals",
-        dateKey
-      );
+    const isStressed = summary.prediction !== 1;
 
-      const isStressed = summary.prediction !== 1;
-      console.log(summary.prediction);
-      console.log(isStressed);
-
-      await setDoc(
-        ref,
-        {
-          date: dateKey,
-          totalChecks: increment(1),
-          stressedCount: increment(isStressed ? 1 : 0),
-          notStressedCount: increment(isStressed ? 0 : 1),
-          lastUpdated: serverTimestamp()
-        },
-        { merge: true }
-      );
-
-      console.log("✅ Daily vital updated:", dateKey);
-    } catch (err) {
-      console.error("❌ Error saving daily vital:", err);
-    }
+    await setDoc(
+      ref,
+      {
+        date: dateKey,
+        totalChecks: increment(1),
+        stressedCount: increment(isStressed ? 1 : 0),
+        notStressedCount: increment(isStressed ? 0 : 1),
+        lastUpdated: serverTimestamp()
+      },
+      { merge: true }
+    );
   };
 
-  /* ================== FETCH LAST 10 DAYS ================== */
+  /* ================= LOAD VITALS FOR ANY USER ================= */
 
-  useEffect(() => {
-    if (!firebaseUser || isDoctor) {
-      setDailyVitals([]);
-      setLoadingVitals(false);
-      return;
-    }
+  const loadVitalsForUser = (userId) => {
+    if (!userId) return;
 
-    const ref = collection(
-      db,
-      "users",
-      firebaseUser.uid,
-      "dailyVitals"
-    );
+    setLoadingVitals(true);
+    setActiveUserId(userId);
 
-    const q = query(
-      ref,
-      orderBy("date", "desc"),
-      limit(10)
-    );
+    const ref = collection(db, "users", userId, "dailyVitals");
+    const q = query(ref, orderBy("date", "desc"), limit(10));
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    return onSnapshot(q, (snapshot) => {
       const data = snapshot.docs
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }))
-        .reverse(); // oldest → newest for charts
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .reverse(); // oldest → newest
 
       setDailyVitals(data);
+      console.log(data);
       setLoadingVitals(false);
     });
+  };
 
-    return () => unsubscribe();
+  /* ================= AUTO‑LOAD OWN DATA FOR PATIENT ================= */
+
+  useEffect(() => {
+    if (!firebaseUser || isDoctor) return;
+
+    const unsubscribe = loadVitalsForUser(firebaseUser.uid);
+    return () => unsubscribe && unsubscribe();
   }, [firebaseUser, isDoctor]);
 
-  /* ================== CONTEXT VALUE ================== */
+  /* ================= CONTEXT EXPOSURE ================= */
 
   return (
     <DashboardDataContext.Provider
       value={{
-        /* Profile edit */
+        /* profile */
         editOpen,
         saving,
         error,
@@ -153,10 +127,14 @@ export const DashboardDataProvider = ({ children }) => {
         closeEditDialog,
         updateDashboardProfile,
 
-        /* Daily vitals */
-        saveVital,
+        /* vitals */
         dailyVitals,
-        loadingVitals
+        loadingVitals,
+        saveVital,
+
+        /* doctor action */
+        loadVitalsForUser,
+        activeUserId
       }}
     >
       {children}
