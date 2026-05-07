@@ -65,14 +65,14 @@ export default function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <FormControlLabel
+          {/* <FormControlLabel
             control={<Checkbox 
               value="asDoctor" 
               color="primary" 
               onChange={(e) => setAsDoctor(e.target.checked)}
             />}
             label="As a Doctor"
-          />
+          /> */}
           {error && <Typography color="error">{error}</Typography>}
           <Button
             type="submit"
