@@ -7,60 +7,37 @@ import {
   Box
 } from "@mui/material";
 import MessageIcon from "@mui/icons-material/Message";
+import ShowChartIcon from "@mui/icons-material/ShowChart";
 import { useUser } from "../../context/userContext";
 import { useChat } from "../../context/chatContext";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import ProgressChartDialog from "./ProgressChartDialog";
 
-const DoctorPatientGrid = () => {
-  const { contacts, loadingContacts, currentUser } = useUser();
+const PaitentGrid = () => {
+  const { contacts, currentUser } = useUser();
   const { getPreviousChats } = useChat();
   const navigate = useNavigate();
 
   const [chatPatients, setChatPatients] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [chartOpen, setChartOpen] = useState(false);
 
   useEffect(() => {
-    const filterChattedPatients = async () => {
+    const loadPatients = async () => {
       if (!currentUser) return;
 
-      const chatIds = await getPreviousChats(); // ✅ SAME logic as ContactList
-
-      const filtered = contacts.filter((p) =>
-        chatIds.includes(p.id)
-      );
-
-      setChatPatients(filtered);
-      setLoading(false);
+      const ids = await getPreviousChats();
+      setChatPatients(contacts.filter(p => ids.includes(p.id)));
     };
 
-    filterChattedPatients();
+    loadPatients();
   }, [contacts, currentUser]);
-
-  if (loadingContacts || loading) {
-    return (
-      <Typography align="center">
-        Loading patients...
-      </Typography>
-    );
-  }
 
   if (!chatPatients.length) {
     return (
-      <>
-        <Typography
-          variant="h5"
-          align="center"
-          fontWeight={600}
-          sx={{ mb: 2 }}
-        >
-          Your Patients
-        </Typography>
-
-        <Typography align="center">
-          No patients have chatted with you yet.
-        </Typography>
-      </>
+      <Typography align="center">
+        No patients have contacted you yet.
+      </Typography>
     );
   }
 
@@ -81,22 +58,36 @@ const DoctorPatientGrid = () => {
           <Grid item xs={12} md={6} key={patient.id}>
             <Paper elevation={3} sx={{ p: 2 }}>
               <Box display="flex" alignItems="center">
-                <Avatar
-                  src="/default-profile-pic.png"
-                  sx={{ width: 56, height: 56, mr: 2 }}
-                />
+                <Avatar sx={{ mr: 2 }}>
+                  {patient.name?.[0]}
+                </Avatar>
+
                 <Box flexGrow={1}>
                   <Typography variant="h6">
-                    {patient.name || "Unnamed Patient"}
+                    {patient.name}
                   </Typography>
-                  <Typography>Email: {patient.email}</Typography>
+                  <Typography>{patient.email}</Typography>
                   <Typography>
-                    Phone: {patient.phoneNumber || "N/A"}
+                    {patient.phoneNumber || "N/A"}
                   </Typography>
                 </Box>
               </Box>
 
-              <Box mt={2} textAlign="right">
+              {/* ✅ Buttons */}
+              <Box
+                mt={2}
+                display="flex"
+                justifyContent="flex-end"
+                gap={2}
+              >
+                <Button
+                  variant="outlined"
+                  startIcon={<ShowChartIcon />}
+                  onClick={() => setChartOpen(true)}
+                >
+                  Progress
+                </Button>
+
                 <Button
                   variant="contained"
                   startIcon={<MessageIcon />}
@@ -113,8 +104,14 @@ const DoctorPatientGrid = () => {
           </Grid>
         ))}
       </Grid>
+
+      {/* ✅ Chart Dialog */}
+      <ProgressChartDialog
+        open={chartOpen}
+        onClose={() => setChartOpen(false)}
+      />
     </>
   );
 };
 
-export default DoctorPatientGrid;
+export default PaitentGrid;
