@@ -30,9 +30,13 @@ const HeartbeatDisplay = () => {
         clearInterval(intervalId);
         const averageRR = intervals.reduce((a, b) => a + b, 0) / intervals.length;
         const averageBPM = Math.round(60000 / averageRR);
-        setSummary({ prediction: 1, heartRate: averageBPM }); // Not Stressed
+        const finalSummary = {
+          prediction: 1, // ✅ Not Stressed
+          heartRate: averageBPM
+        };
+        setSummary(finalSummary);
         setCollecting(false);
-        saveVital(summary);
+        saveVital(finalSummary);
       }
     }, 1000);
   };
@@ -86,7 +90,7 @@ const HeartbeatDisplay = () => {
       setSummary(summaryData);
       setCollecting(false);
       socketRef.current.disconnect(); // Clean up after done
-      saveVital(summary);
+      saveVital(summaryData);
     });
 
     // Handle errors

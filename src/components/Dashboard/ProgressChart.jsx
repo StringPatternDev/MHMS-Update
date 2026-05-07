@@ -16,8 +16,8 @@ const data = [
 ];
 
 const ProgressChart = () => {
-  const { vitals, loadingVitals } = useDashboardData();
-  console.log(vitals);
+  const { dailyVitals, loadingVitals } = useDashboardData();
+  console.log(dailyVitals);
 
 
   return(

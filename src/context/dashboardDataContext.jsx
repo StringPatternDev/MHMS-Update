@@ -3,10 +3,12 @@ import {
   doc,
   updateDoc,
   collection,
-  addDoc,
+  setDoc,
   onSnapshot,
   query,
   orderBy,
+  limit,
+  increment,
   serverTimestamp
 } from "firebase/firestore";
 import { db } from "../firebase";
@@ -23,17 +25,13 @@ export const DashboardDataProvider = ({ children }) => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
-  /* ---------------- VITALS STATE ---------------- */
-  const [vitals, setVitals] = useState([]);
+  /* ---------------- DAILY VITALS STATE ---------------- */
+  const [dailyVitals, setDailyVitals] = useState([]);
   const [loadingVitals, setLoadingVitals] = useState(true);
 
   /* ================== PROFILE EDIT ================== */
 
-  const openEditDialog = () => {
-    console.log("✅ Edit dialog opened");
-    setEditOpen(true);
-  };
-
+  const openEditDialog = () => setEditOpen(true);
   const closeEditDialog = () => setEditOpen(false);
 
   const updateDashboardProfile = async (updatedData) => {
@@ -62,61 +60,80 @@ export const DashboardDataProvider = ({ children }) => {
     }
   };
 
-  /* ================== SAVE VITAL ================== */
+  /* ================== SAVE DAILY VITAL ================== */
 
   /**
-   * Called from HeartbeatDisplay once summary is ready
+   * ✅ Called from HeartbeatDisplay when summary is ready
+   * ✅ Stores in users/{uid}/dailyVitals/{YYYY-MM-DD}
+   * ✅ Atomic + cost‑efficient
    */
   const saveVital = async (summary) => {
     if (!firebaseUser || isDoctor) return;
 
     try {
-      const vitalsRef = collection(
+      const dateKey = new Date().toISOString().split("T")[0];
+
+      const ref = doc(
         db,
         "users",
         firebaseUser.uid,
-        "vitals"
+        "dailyVitals",
+        dateKey
       );
 
-      await addDoc(vitalsRef, {
-        heartRate: summary.heartRate,
-        prediction: summary.prediction,
-        stressStatus:
-          summary.prediction === 1 ? "Not Stressed" : "Stressed",
-        createdAt: serverTimestamp()
-      });
+      const isStressed = summary.prediction !== 1;
+      console.log(summary.prediction);
+      console.log(isStressed);
 
-      console.log("✅ Vital saved to Firestore");
+      await setDoc(
+        ref,
+        {
+          date: dateKey,
+          totalChecks: increment(1),
+          stressedCount: increment(isStressed ? 1 : 0),
+          notStressedCount: increment(isStressed ? 0 : 1),
+          lastUpdated: serverTimestamp()
+        },
+        { merge: true }
+      );
+
+      console.log("✅ Daily vital updated:", dateKey);
     } catch (err) {
-      console.error("❌ Error saving vital:", err);
+      console.error("❌ Error saving daily vital:", err);
     }
   };
 
-  /* ================== LIVE VITALS LISTENER ================== */
+  /* ================== FETCH LAST 10 DAYS ================== */
 
   useEffect(() => {
     if (!firebaseUser || isDoctor) {
-      setVitals([]);
+      setDailyVitals([]);
       setLoadingVitals(false);
       return;
     }
 
-    const vitalsRef = collection(
+    const ref = collection(
       db,
       "users",
       firebaseUser.uid,
-      "vitals"
+      "dailyVitals"
     );
 
-    const q = query(vitalsRef, orderBy("createdAt", "asc"));
+    const q = query(
+      ref,
+      orderBy("date", "desc"),
+      limit(10)
+    );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const vitalsData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      const data = snapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+        .reverse(); // oldest → newest for charts
 
-      setVitals(vitalsData);
+      setDailyVitals(data);
       setLoadingVitals(false);
     });
 
@@ -136,9 +153,9 @@ export const DashboardDataProvider = ({ children }) => {
         closeEditDialog,
         updateDashboardProfile,
 
-        /* Vitals */
+        /* Daily vitals */
         saveVital,
-        vitals,
+        dailyVitals,
         loadingVitals
       }}
     >
