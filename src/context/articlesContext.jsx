@@ -79,7 +79,7 @@ export const ArticlesProvider = ({ children }) => {
   const fetchPage = async (pageNumber) => {
     const response = await axios.get(BASE_URL, {
       params: {
-        api_token: process.env.REACT_APP_NEWS_API_TOKEN,
+        api_token: process.env.apiToken,
         categories: "health",
         search: "mental health OR depression OR anxiety OR psychology",
         language: "en",
